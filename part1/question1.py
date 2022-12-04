@@ -3,15 +3,15 @@ class Ruban:
 
     def __init__(self, content=None):
         if content is None:
-            content = ["#"]
+            content = ["#", "#", "#"]
             self.content = content
         else:
             self.content = self.load(content)
-        self.reading = 0
+        self.reading = 1
 
     def load(self, content):
         result = ["#"]
-        for elm in content:
+        for elm in content[0]:
             result.append(elm)
         result.append("#")
         return result
@@ -62,6 +62,14 @@ class Transition:
             temp3.append(elm)
         self.move = temp3
 
+    def __str__(self):
+        print("start", self.start)
+        print("end", self.end)
+        print("read", self.read)
+        print("write", self.write)
+        print("move", self.move)
+        return "------------------"
+
 
 class MT:
     """ représente une machine de Turing """
@@ -82,19 +90,19 @@ class MT:
         self.nb_ruban = len(self.rubans)
         self.nb_transitions = len(self.transitions)
 
+    def __str__(self):
+        for i in range(self.nb_ruban):
+            print("r" + str(i+1) + " : ", self.rubans[i].content)
+            print("        " + ("     " * self.rubans[i].reading) + "^")
+        print("états :", self.etats)
+        return "état courant : " + self.current_state
+
     def step(self):
+        """ fait effectuer un pas de calcul a une machine de Turing déterministe """
         res = []
         for transi in self.transitions:
-            possible_path = True
-            if transi.start == self.current_state:
-                for i in range(self.nb_ruban):
-                    if self.rubans[i].read() == transi.read[i]:
-                        continue
-                    else:
-                        possible_path = False
-            if possible_path:
-                res.append(transi)
-        print(res)
+            if self.current_state == transi.start:
+                pass
 
 
 def create_mt(path):
@@ -111,7 +119,6 @@ def create_mt(path):
                 res.append(line[0:len(line)-1])
             else:
                 res.append(line)
-    print(res)
     # gestion de la lecture des etats :
     temp_state = []
     etats = res.pop(0)
@@ -143,5 +150,6 @@ def create_mt(path):
 
 
 
-machine1 = create_mt("C:\\Users\jules\PycharmProjects\THL_project_L3\part1\mt1")
+machine1 = create_mt("mt1")
 machine1.step()
+# print(machine1)
