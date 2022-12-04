@@ -20,16 +20,17 @@ class Ruban:
         if self.reading == 0:
             self.content.insert(0, "#")
         self.reading -= 1
-        return self.content[self.reading]
 
     def move_right(self):
         if self.reading == len(self.content) -1:
             self.content.append("#")
         self.reading += 1
-        return self.content[self.reading]
 
     def read(self):
         return self.content[self.reading]
+
+    def write(self, to_write):
+        self.content[self.reading] = to_write
 
 
 class Transition:
@@ -99,10 +100,42 @@ class MT:
 
     def step(self):
         """ fait effectuer un pas de calcul a une machine de Turing déterministe """
-        res = []
+        # sélection de la transition
         for transi in self.transitions:
             if self.current_state == transi.start:
-                pass
+                possible = True
+                for i in range(self.nb_ruban):
+                    if self.rubans[i].read() != transi.read[i]:
+                        possible = False
+                if possible:
+                    # execution de la transition
+                    for i in range(self.nb_ruban):
+                        self.rubans[i].write(transi.write[i])
+                        if transi.move[i] == ">":
+                            self.rubans[i].move_right()
+                        elif transi.move[i] == "<":
+                            self.rubans[i].move_left()
+                    self.current_state = transi.end
+                    return True
+        return False
+
+    def full_run(self):
+        """ effectue l'execution complete d'une machine de turing """
+        ctrl = True
+        count = 0
+        print("======== ETAT INITIAL ===========")
+        print(self)
+        print("================================= \n\n\n")
+        while ctrl:
+            ctrl = self.step()
+            count += 1
+            print("========", "PAS N°" + str(count), "===============" + ("="*(1-count//10)))
+            print(self)
+            print("================================= \n\n\n")
+        if self.current_state == "F":
+            return "mot accepté"
+        else:
+            return "mot rejeté"
 
 
 def create_mt(path):
@@ -148,8 +181,5 @@ def create_mt(path):
     return MT(temp_state, temp_rubans, temp_transi)
 
 
-
-
 machine1 = create_mt("mt1")
-machine1.step()
-# print(machine1)
+print(machine1.full_run())
