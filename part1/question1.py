@@ -138,6 +138,38 @@ class MT:
             return "mot rejeté"
 
 
+class MTcaller:
+
+    def __init__(self, path, path_vec):
+        if len(path_vec) == 0:
+            raise Exception("entrez au moins 1 chemin vers une machine de Turing")
+        self.machine1 = create_mt(path)
+        self.callable_mt = []
+        for elm in path_vec:
+            self.callable_mt.append(create_mt(elm))
+
+    def step(self):
+        """ fait effectuer un pas de calcul a une machine de Turing déterministe """
+        # sélection de la transition
+        for transi in self.transitions:
+            if self.current_state == transi.start:
+                possible = True
+                for i in range(self.nb_ruban):
+                    if self.rubans[i].read() != transi.read[i]:
+                        possible = False
+                if possible:
+                    # execution de la transition
+                    for i in range(self.nb_ruban):
+                        self.rubans[i].write(transi.write[i])
+                        if transi.move[i] == ">":
+                            self.rubans[i].move_right()
+                        elif transi.move[i] == "<":
+                            self.rubans[i].move_left()
+                    self.current_state = transi.end
+                    return True
+        return False
+
+
 def create_mt(path):
     """ a partir d'un fichier txt contenant une machine de turing sous forme écrite,
     initialise une machine de turing et la retourne """
