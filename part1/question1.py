@@ -129,7 +129,7 @@ class MT:
         while ctrl:
             ctrl = self.step()
             count += 1
-            print("========", "PAS N°" + str(count), "===============" + ("="*(1-count//10)))
+            print("========", "PAS N°" + str(count), "===============" + ("=" * (1 - count // 10)))
             print(self)
             print("================================= \n\n\n")
         if self.current_state == "F":
@@ -182,4 +182,4 @@ def create_mt(path):
 
 
 machine1 = create_mt("mt1")
-print(machine1.full_run())
+machine1.full_run()
