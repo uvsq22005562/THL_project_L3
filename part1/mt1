@@ -1,6 +1,7 @@
-state:I,q1,F
-input:10110100000
+state:I,q1,q2,F
+input:10100000
 ruban:1
+sous_machines:2
 
 I,1
 I,0,>
@@ -14,5 +15,8 @@ q1,#,<
 q1,1
 q1,0,<
 
-q1,0
-F,1,S
+*q1,0
+*q2,M1,S
+
+*q2,_
+*F,M2,S
