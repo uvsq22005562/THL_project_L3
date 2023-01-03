@@ -54,7 +54,7 @@ class MtSimple(Mt):
         while len(lines) != 0:
             t1 = lines.pop(0).split(",")
             t2 = lines.pop(0).split(",")
-            self.transition.append(Transition(t1[0], t2[0], t1[1], t2[1], t2[2]))
+            self.transition.append(Transition(t1[0], t2[0], t1[1:(1 + len(self.tape))], t2[1:(1 + len(self.tape))], t2[(1 + len(self.tape)):(1 + 2 * len(self.tape))]))
 
     def __str__(self):
         for i in range(len(self.tape)):
@@ -68,13 +68,15 @@ class MtSimple(Mt):
             if possible_transition.start_eq(self.current_state):
                 possible = True
                 for i in range(len(self.tape)):
-                    if self.tape[i].read() != possible_transition.get_read(i)\
-                            or possible_transition.get_read(i) == "_":
+                    if (self.tape[i].read() != possible_transition.get_read(i) and possible_transition.get_read(i) != "_")\
+                            or (possible_transition.get_read(i) == "_" and self.tape[i].read == "#"):
                         possible = False
                 if possible:
                     # execution de la transition
                     for i in range(len(self.tape)):
-                        if possible_transition.get_write(i) != "_":
+                        if possible_transition.get_write(i) == "_":
+                            pass
+                        else:
                             self.tape[i].write(possible_transition.get_write(i))
                         if possible_transition.get_move(i) == ">":
                             self.tape[i].move_right()
@@ -83,6 +85,29 @@ class MtSimple(Mt):
                     self.current_state = possible_transition.get_end()
                     return True
         return False
+
+    def dead_transi(self):
+        tocheck = []
+        for elm in self.transition:
+            if elm.get_start() != "I": # car on regarde les prédécesseurs (choix)
+                tocheck.append(elm)
+        # sélections de tout les couples prédécesseur / successeur dans les transitions de la mt
+        couples = []
+        for elm in tocheck:
+            for transi in self.transition:
+                if transi.get_end() == elm.get_start() and transi != elm:
+                    couples.append([transi, elm])
+        for elm in couples:
+            if elm[0].move == ["S"] and elm[0].get_read(0) == elm[0].get_write(0):
+                print("transi a del", elm[0])
+                # ajout de la nouvelle transition:
+                self.transition.append(Transition(elm[0].get_start(), elm[1].get_end(), elm[0].get_read(0), elm[1].get_write(0), elm[1].get_move(0)))
+                print("remplacé par :", self.transition[len(self.transition) - 1])
+                for x in range(len(self.transition)):
+                    if self.transition[x] == elm[0] or self.transition[x] == elm[1]:
+                        del self.transition[x]
+                        return True
+
 
     def run(self):
         ctrl = True
@@ -298,7 +323,21 @@ class Transition:
         return self.start
 
 
-# m1 = MtSimple(1, "part1/mt1")
-# print(m1.run())
-m2 = MtComplex(2, "part1/mt1", ["part1/mt2", "part1/mt3"])
-print(m2.run())
+# m2 = MtComplex(2, "part1/mt1", ["part1/mt2", "part1/mt3"])
+# print(m2.run())
+left = MtSimple(1, "machines/LEFT")
+# left.run()
+search_1 = MtSimple(2, "machines/SEARCH_1")
+# search_1.run()
+erase = MtSimple(3, "machines/ERASE")
+# erase.run()
+copy = MtSimple(4, "machines/COPY")
+# copy.run()
+multiply = MtSimple(5, "machines/MULTIPLY")
+for elm in multiply.transition:
+    print(elm.start, elm.end)
+    print(elm.read)
+    print(elm.write)
+    print("===================")
+
+multiply.run()
