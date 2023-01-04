@@ -54,7 +54,8 @@ class MtSimple(Mt):
         while len(lines) != 0:
             t1 = lines.pop(0).split(",")
             t2 = lines.pop(0).split(",")
-            self.transition.append(Transition(t1[0], t2[0], t1[1:(1 + len(self.tape))], t2[1:(1 + len(self.tape))], t2[(1 + len(self.tape)):(1 + 2 * len(self.tape))]))
+            self.transition.append(Transition(t1[0], t2[0], t1[1:(1 + len(self.tape))], t2[1:(1 + len(self.tape))],
+                                              t2[(1 + len(self.tape)):(1 + 2 * len(self.tape))]))
 
     def __str__(self):
         for i in range(len(self.tape)):
@@ -68,7 +69,8 @@ class MtSimple(Mt):
             if possible_transition.start_eq(self.current_state):
                 possible = True
                 for i in range(len(self.tape)):
-                    if (self.tape[i].read() != possible_transition.get_read(i) and possible_transition.get_read(i) != "_")\
+                    if (self.tape[i].read() != possible_transition.get_read(i) and possible_transition.get_read(
+                            i) != "_") \
                             or (possible_transition.get_read(i) == "_" and self.tape[i].read == "#"):
                         possible = False
                 if possible:
@@ -101,7 +103,9 @@ class MtSimple(Mt):
             if elm[0].move == ["S"] and elm[0].get_read(0) == elm[0].get_write(0):
                 print("transi a del", elm[0])
                 # ajout de la nouvelle transition:
-                self.transition.append(Transition(elm[0].get_start(), elm[1].get_end(), elm[0].get_read(0), elm[1].get_write(0), elm[1].get_move(0)))
+                self.transition.append(
+                    Transition(elm[0].get_start(), elm[1].get_end(), elm[0].get_read(0), elm[1].get_write(0),
+                               elm[1].get_move(0)))
                 print("remplacé par :", self.transition[len(self.transition) - 1])
                 for x in range(len(self.transition)):
                     if self.transition[x] == elm[0] or self.transition[x] == elm[1]:
@@ -126,8 +130,9 @@ class MtSimple(Mt):
         else:
             return "mot rejeté"
 
-    def change_input(self, tape):
-        self.tape[0] = tape
+    def change_input(self, content):
+        temp = Tape(content)
+        self.tape[0] = temp
 
 
 class MtComplex(Mt):
@@ -168,15 +173,22 @@ class MtComplex(Mt):
         while len(lines) != 0:
             t1 = lines.pop(0).split(",")
             t2 = lines.pop(0).split(",")
-            if "*" in t1[0]: # cas de l'appel a une sous machine
-                self.transition.append(Transition(t1[0].replace("*", ""),
-                                                  "I" + ("+" * int(t2[1].replace("M", ""))),
-                                                  t1[1], "_", t2[2]))
+            if "*" in t1[0]:  # cas de l'appel a une sous machine
+                self.transition.append(Transition(t1[0].replace("*", ""),  # etat initial
+                                                  "I" + ("+" * int(t2[1].replace("M", ""))),  # etat final
+                                                  t1[1:(1 + len(self.tape))], "_" * len(self.tape),
+                                                  t2[(len(self.tape)):(2 * len(self.tape))]))  # le reste
                 self.transition.append(Transition("F" + ("+" * int(t2[1].replace("M", ""))),
                                                   t2[0].replace("*", ""),
-                                                  "_", "_", t2[2]))
+                                                  "_" * len(self.tape), "_" * len(self.tape),
+                                                  t2[(len(self.tape)):(2 * len(self.tape))]))
+                self.transition.append(Transition("F" + ("+" * int(t2[1].replace("M", ""))),
+                                                  t2[0].replace("*", ""),
+                                                  "#" * len(self.tape), "#" * len(self.tape),
+                                                  t2[(len(self.tape)):(2 * len(self.tape))]))
             else:
-                self.transition.append(Transition(t1[0], t2[0], t1[1], t2[1], t2[2]))
+                self.transition.append(Transition(t1[0], t2[0], t1[1:(1 + len(self.tape))], t2[1:(1 + len(self.tape))],
+                                                  t2[(1 + len(self.tape)):(1 + 2 * len(self.tape))]))
         # gestion des machines appelés :
         for i in range(len(submt_path)):
             # lecture du fichier :
@@ -199,7 +211,9 @@ class MtComplex(Mt):
             while len(lines) != 0:
                 t1 = lines.pop(0).split(",")
                 t2 = lines.pop(0).split(",")
-                self.transition.append(Transition(t1[0] + ("+" * (i+1)), t2[0] + ("+" * (i+1)), t1[1], t2[1], t2[2]))
+                self.transition.append(
+                    Transition(t1[0] + ("+" * (i + 1)), t2[0] + ("+" * (i + 1)), t1[1:(1 + len(self.tape))],
+                               t2[1:(1 + len(self.tape))], t2[(1 + len(self.tape)):(1 + 2 * len(self.tape))]))
 
     def __str__(self):
         for i in range(len(self.tape)):
@@ -213,14 +227,16 @@ class MtComplex(Mt):
             if possible_transition.start_eq(self.current_state):
                 possible = True
                 for i in range(len(self.tape)):
-                    if self.tape[i].read() != possible_transition.get_read(i) \
-                            and possible_transition.get_read(i) != "_":
+                    if (self.tape[i].read() != possible_transition.get_read(i) and possible_transition.get_read(
+                            i) != "_") \
+                            or (possible_transition.get_read(i) == "_" and self.tape[i].read() == "#"):
                         possible = False
                 if possible:
                     # execution de la transition
-                    print("transition choisie : ", possible_transition)
                     for i in range(len(self.tape)):
-                        if possible_transition.get_write(i) != "_":
+                        if possible_transition.get_write(i) == "_":
+                            pass
+                        else:
                             self.tape[i].write(possible_transition.get_write(i))
                         if possible_transition.get_move(i) == ">":
                             self.tape[i].move_right()
@@ -247,8 +263,9 @@ class MtComplex(Mt):
         else:
             return "mot rejeté"
 
-    def change_input(self, tape):
-        self.tape[0] = tape
+    def change_input(self, content):
+        temp = Tape(content)
+        self.tape[0] = temp
 
 
 class Tape:
@@ -302,7 +319,7 @@ class Transition:
             self.move.append(movement)
 
     def __str__(self):
-        return str([self.start, self.end, self.read]) + str([self.write, self.move])
+        return str([self.start, self.end]) + str(self.read) + str(self.write) + str(self.move)
 
     def get_read(self, tape_idt):
         return self.read[tape_idt]
@@ -323,21 +340,33 @@ class Transition:
         return self.start
 
 
-# m2 = MtComplex(2, "part1/mt1", ["part1/mt2", "part1/mt3"])
-# print(m2.run())
 left = MtSimple(1, "machines/LEFT")
-# left.run()
 search_1 = MtSimple(2, "machines/SEARCH_1")
-# search_1.run()
 erase = MtSimple(3, "machines/ERASE")
-# erase.run()
 copy = MtSimple(4, "machines/COPY")
-# copy.run()
 multiply = MtSimple(5, "machines/MULTIPLY")
-for elm in multiply.transition:
-    print(elm.start, elm.end)
-    print(elm.read)
-    print(elm.write)
-    print("===================")
+sort = MtComplex(6, "machines/SORT", ["machines/COPY", "machines/REPLACE_IF_GREATER", "machines/COPY",
+                                      "machines/REPLACE_IF_GREATER"])
 
-multiply.run()
+machines = [left, search_1, erase, copy, multiply, sort]
+while True:
+    print("\n\n\n")
+    print("tapez -1 pour quitter")
+    print("tapez 0 pour changer l'input d'une machine")
+    print("sinon, pour exécuter une des machines suivante : ")
+    print("1 : left \n 2 : search \n 3 : erase \n 7 : copy \n 5 : muliply \n 6 : sort")
+    user_input = int(input("entrez un nombre de question entre 1 et 6 --> "))
+    if 0 < user_input < 7:
+        print(machines[user_input-1].run())
+    elif user_input == -1:
+        break
+    elif user_input == 0:
+        user_input2 = int(input("entre le numéro de la machine dont vous voulez changer l'input --> "))
+        if 0 < user_input2 < 7:
+            content = str(input("entrez l'input de votre choix  --> "))
+            machines[user_input2-1].change_input(content)
+            print(machines[user_input2-1].run())
+        else:
+            print("commande non reconnu")
+    else:
+        print("commande non reconnu")
